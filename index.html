@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jeu CE1 - Exercice 7 : Compter les cubes</title>
+<style>
+  :root{
+    --bg:#f6c27a;
+    --panel:#fffdf8;
+    --panel-2:#fff7ea;
+    --navy:#17324d;
+    --green:#2f8f57;
+    --red:#c94242;
+    --orange:#f2a64a;
+    --border:#d79b5b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--bg);
+    color:#222;
+  }
+  .app{
+    max-width:1000px;
+    margin:0 auto;
+    padding:18px;
+  }
+  .panel{
+    background:var(--panel);
+    border:3px solid #ead2ae;
+    box-shadow:0 8px 24px rgba(0,0,0,.10);
+    padding:18px;
+  }
+  header{
+    background:var(--panel-2);
+    border:2px solid #efddc0;
+    padding:14px 18px;
+    margin-bottom:16px;
+    text-align:center;
+  }
+  .brand{
+    color:var(--navy);
+    font-weight:900;
+    font-size:15px;
+    letter-spacing:.4px;
+  }
+  h1{
+    margin:6px 0 8px;
+    font-size:clamp(28px,4vw,42px);
+    color:#111;
+  }
+  .subtitle{
+    margin:0;
+    color:#4f5b66;
+    font-size:18px;
+  }
+  .topbar{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat{
+    background:#fff8ee;
+    border:2px solid var(--border);
+    text-align:center;
+    padding:10px;
+    font-weight:900;
+    color:var(--navy);
+    min-height:74px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .stat span{font-size:28px; margin-top:4px;}
+  .progress{
+    width:100%; height:14px; background:#f1e5d2; overflow:hidden; margin-bottom:18px;
+    border:1px solid #e0c7a0;
+  }
+  .progress .bar{
+    height:100%; width:0; background:linear-gradient(90deg, #17324d, #3e6a92);
+    transition:width .25s;
+  }
+  .scene{
+    background:white;
+    border:2px solid #d8d8d8;
+    padding:12px;
+    margin-bottom:18px;
+    min-height:520px;
+  }
+  svg{display:block; width:100%; height:auto;}
+  .prompt{
+    font-size:clamp(28px,4vw,46px);
+    text-align:center;
+    margin:6px 0 8px;
+    line-height:1.2;
+  }
+  .answer-box{
+    display:inline-block;
+    vertical-align:middle;
+    width:130px;
+    height:58px;
+    border:3px solid var(--navy);
+    background:#fff;
+    margin:0 8px;
+  }
+  .answer-box input{
+    width:100%;
+    height:100%;
+    border:none;
+    outline:none;
+    text-align:center;
+    font-size:34px;
+    font-weight:900;
+    color:var(--navy);
+    background:transparent;
+  }
+  .feedback{
+    min-height:36px;
+    text-align:center;
+    font-size:24px;
+    font-weight:900;
+    margin:10px 0 12px;
+  }
+  .actions{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  button{
+    border:none;
+    padding:14px 26px;
+    font-size:20px;
+    font-weight:900;
+    cursor:pointer;
+    color:white;
+    box-shadow:0 3px 0 rgba(0,0,0,.16);
+  }
+  .btn-check{background:#2f8f57;}
+  .btn-next{background:#6a5acd; display:none;}
+  .btn-replay{background:#17324d;}
+  button:disabled{opacity:.55; cursor:default}
+  .end{
+    display:none;
+    text-align:center;
+    padding:32px 14px;
+  }
+  .end h2{font-size:42px; margin:0 0 12px; color:var(--navy)}
+  .end p{font-size:24px; font-weight:800; margin:0 0 18px}
+  .hint{
+    margin-top:10px;
+    text-align:center;
+    font-size:16px;
+    color:#5c5c5c;
+  }
+  @media (max-width:700px){
+    .topbar{grid-template-columns:1fr;}
+    .prompt{font-size:32px}
+    .answer-box{width:110px;height:54px}
+    .answer-box input{font-size:30px}
+    button{width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel">
+    <header>
+      <div class="brand">Les Petits Défis CE1</div>
+      <h1>Compter les cubes</h1>
+      <p class="subtitle">Jeu inspiré de l'exercice 7 des évaluations CE1</p>
+    </header>
+
+    <section id="game">
+      <div class="topbar">
+        <div class="stat">Question<span id="qnum">1 / 8</span></div>
+        <div class="stat">Score<span id="score">0</span></div>
+        <div class="stat">Réussites<span id="good">0</span></div>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+
+      <div class="scene">
+        <svg id="board" viewBox="0 0 900 460" aria-label="matériel de numération"></svg>
+      </div>
+
+      <div class="prompt">
+        Il y a <span class="answer-box"><input id="answer" type="text" inputmode="numeric" autocomplete="off" /></span> cubes en tout.
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="actions">
+        <button class="btn-check" id="checkBtn">Valider</button>
+        <button class="btn-next" id="nextBtn">Question suivante</button>
+      </div>
+
+      <div class="hint">Compte les dizaines et les unités.</div>
+    </section>
+
+    <section class="end" id="end">
+      <h2>Bravo !</h2>
+      <p id="finalText"></p>
+      <div class="actions">
+        <button class="btn-replay" id="replayBtn">Rejouer</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    answer:15,
+    rods:[{x:280,y:75,dir:'v'}],
+    units:[{x:450,y:90},{x:510,y:90},{x:570,y:90},{x:470,y:155},{x:530,y:120}]
+  },
+  {
+    answer:27,
+    rods:[{x:560,y:50,dir:'v'},{x:635,y:170,dir:'v'}],
+    units:[{x:215,y:110},{x:275,y:110},{x:245,y:155},{x:215,y:200},{x:275,y:200},{x:275,y:290},{x:210,y:335}]
+  },
+  {
+    answer:23,
+    rods:[{x:240,y:70,dir:'v'}],
+    units:[{x:430,y:30},{x:490,y:30},{x:460,y:85},{x:430,y:140},{x:490,y:140},{x:330,y:270},{x:400,y:270},{x:365,y:320},{x:330,y:370},{x:400,y:370},{x:605,y:225},{x:655,y:270},{x:560,y:400}]
+  },
+  {
+    answer:45,
+    rods:[{x:190,y:120,dir:'v',tilt:-0.5},{x:380,y:115,dir:'v',tilt:-0.5},{x:120,y:270,dir:'v',tilt:0.5},{x:315,y:270,dir:'v',tilt:0.5}],
+    units:[{x:585,y:150},{x:620,y:185},{x:655,y:305},{x:620,y:360},{x:585,y:415}]
+  },
+  {
+    answer:49,
+    rods:[{x:95,y:55,dir:'v'},{x:245,y:245,dir:'v'},{x:520,y:260,dir:'v'},{x:690,y:55,dir:'v'}],
+    units:[{x:370,y:95},{x:430,y:95},{x:400,y:150},{x:370,y:205},{x:430,y:205},{x:745,y:335},{x:805,y:335},{x:775,y:290},{x:775,y:245}]
+  },
+  {
+    answer:47,
+    rods:[{x:305,y:95,dir:'h'},{x:540,y:165,dir:'h'},{x:305,y:245,dir:'h'},{x:540,y:315,dir:'h'}],
+    units:[{x:95,y:110},{x:130,y:110},{x:165,y:110},{x:105,y:205},{x:155,y:205},{x:130,y:260},{x:105,y:325}]
+  },
+  {
+    answer:80,
+    rods:[
+      {x:85,y:35,dir:'v'},
+      {x:175,y:35,dir:'v'},
+      {x:265,y:35,dir:'v'},
+      {x:355,y:35,dir:'v'},
+      {x:500,y:35,dir:'v'},
+      {x:590,y:35,dir:'v'},
+      {x:680,y:35,dir:'v'},
+      {x:770,y:35,dir:'v'}
+    ],
+    units:[]
+  },
+  {
+    answer:76,
+    rods:[{x:195,y:120,dir:'v'},{x:275,y:120,dir:'v'},{x:355,y:120,dir:'v'},{x:435,y:120,dir:'v'},{x:515,y:120,dir:'v'},{x:635,y:120,dir:'v'},{x:715,y:120,dir:'v'}],
+    units:[{x:60,y:125},{x:95,y:140},{x:70,y:170},{x:70,y:265},{x:100,y:280},{x:75,y:310}]
+  }
+];
+
+const svg = document.getElementById('board');
+const answerInput = document.getElementById('answer');
+const feedback = document.getElementById('feedback');
+const checkBtn = document.getElementById('checkBtn');
+const nextBtn = document.getElementById('nextBtn');
+const qnum = document.getElementById('qnum');
+const scoreEl = document.getElementById('score');
+const goodEl = document.getElementById('good');
+const bar = document.getElementById('bar');
+const game = document.getElementById('game');
+const end = document.getElementById('end');
+const finalText = document.getElementById('finalText');
+const replayBtn = document.getElementById('replayBtn');
+
+let current = 0;
+let score = 0;
+let good = 0;
+let locked = false;
+
+function createSVG(tag, attrs={}){
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  return el;
+}
+
+function drawCube(x, y, size, colors){
+  const g = createSVG('g');
+  const rect = createSVG('rect', {
+    x, y, width:size, height:size,
+    fill:colors.fill,
+    stroke:colors.stroke || '#555',
+    'stroke-width':1.2
+  });
+  g.appendChild(rect);
+  return g;
+}
+
+function drawRod(x, y, dir='v', tilt=0){
+  const g = createSVG('g');
+  if(tilt){ g.setAttribute('transform', `rotate(${tilt*24} ${x+10} ${y+100})`); }
+  const cubeSize = 20;
+  const colors = {fill:'#5bb6c9', stroke:'#4d4d4d'};
+  for(let i=0;i<10;i++){
+    const cx = dir==='v' ? x : x + i*cubeSize;
+    const cy = dir==='v' ? y + i*cubeSize : y;
+    g.appendChild(drawCube(cx, cy, cubeSize, colors));
+  }
+  return g;
+}
+
+function drawUnit(x,y){
+  return drawCube(x,y,20,{fill:'#f3ad57', stroke:'#4d4d4d'});
+}
+
+function renderQuestion(){
+  locked = false;
+  answerInput.value = '';
+  answerInput.disabled = false;
+  checkBtn.disabled = false;
+  nextBtn.style.display = 'none';
+  feedback.textContent = '';
+  feedback.style.color = '#222';
+
+  const q = questions[current];
+  qnum.textContent = `${current+1} / ${questions.length}`;
+  scoreEl.textContent = score;
+  goodEl.textContent = good;
+  bar.style.width = `${(current/questions.length)*100}%`;
+
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  // draw material
+  q.rods.forEach(r => svg.appendChild(drawRod(r.x, r.y, r.dir, r.tilt || 0)));
+  q.units.forEach(u => svg.appendChild(drawUnit(u.x, u.y)));
+
+  setTimeout(() => answerInput.focus(), 80);
+}
+
+function validate(){
+  if(locked) return;
+  const val = parseInt(answerInput.value.trim(),10);
+  if(Number.isNaN(val)){
+    feedback.style.color = 'var(--red)';
+    feedback.textContent = 'Écris un nombre.';
+    answerInput.focus();
+    return;
+  }
+  locked = true;
+  answerInput.disabled = true;
+  checkBtn.disabled = true;
+  const expected = questions[current].answer;
+  if(val === expected){
+    score += 1;
+    good += 1;
+    feedback.style.color = 'var(--green)';
+    feedback.textContent = `Bravo ! Il y a bien ${expected} cubes.`;
+  }else{
+    feedback.style.color = 'var(--red)';
+    feedback.textContent = `Ce n'est pas cela. Il y a ${expected} cubes.`;
+  }
+  scoreEl.textContent = score;
+  goodEl.textContent = good;
+  bar.style.width = `${((current+1)/questions.length)*100}%`;
+  nextBtn.style.display = 'inline-block';
+}
+
+function nextQuestion(){
+  current += 1;
+  if(current >= questions.length){
+    game.style.display = 'none';
+    end.style.display = 'block';
+    finalText.textContent = `Tu as réussi ${score} bonne${score>1?'s':''} réponse${score>1?'s':''} sur ${questions.length}.`;
+    return;
+  }
+  renderQuestion();
+}
+
+checkBtn.addEventListener('click', validate);
+nextBtn.addEventListener('click', nextQuestion);
+replayBtn.addEventListener('click', () => {
+  current = 0; score = 0; good = 0;
+  end.style.display = 'none';
+  game.style.display = 'block';
+  renderQuestion();
+});
+answerInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    if(!locked) validate();
+    else nextQuestion();
+  }
+});
+renderQuestion();
+</script>
+</body>
+</html>
